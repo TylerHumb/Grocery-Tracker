@@ -1,49 +1,43 @@
 import requests
-from bs4 import BeautifulSoup
 import csv
 from datetime import date
+import urllib.parse
 
 def scrape_database():
 
     #for storing scraped data
     data = []
 
-def call_api():
-    # Example API for proof of concept, fetching all deli meat ID's
-    api_url = "www.woolworths.com.au/apis/ui/browse/category"
+def fetch_ids():
 
-    # Define the headers
-    headers = {
+    # Base URL for the API
+    base_url = "https://www.woolworths.com.au/apis/ui/browse/category"
+
+    # Parameters for the API call
+    params = {
         "categoryId": "1_696F07C",
-        "pageNumber": "1",  
-        "pageSize": "269", # changed to return all items instead of a select amount
-        "sortType": "TraderRelevance",
         "url": "/shop/browse/deli-chilled-meals/deli-meats",
-        "location": "/shop/browse/deli-chilled-meals/deli-meats",
-        "formatObject": "{\"name\":\"Deli Meats\"}",
-        "isSpecial": "false",
-        "isBundle": "false",
-        "isMobile": "false",
-        "filters": "[]",
-        "token": "",
-        "gpBoost": "0",
-        "isHideUnavailableProducts": "false",
-        "isRegisteredRewardCardPromotion": "false",
-        "enableAdReRanking": "false",
-        "groupEdmVariants": "true",
-        "categoryVersion": "v2",
-        "flags": "{\"EnableProductBoostExperiment\":false}",
+        "formatObject": '{"name":"Deli Meats"}',
+    }
+    # Properly encode the parameters
+    encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+
+    # Combine base URL with encoded parameters
+    final_url = f"{base_url}?{encoded_params}"
+
+    # Headers for the request
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
     }
 
-    # Make the GET request with the provided headers
-    response = requests.get(api_url, headers=headers)
+    # Make the GET request with headers
+    response = requests.get(final_url, headers=headers)
 
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Print or return the JSON response
-        print(response.json())
-    else:
-        print(f"Error: Failed to fetch data (status code {response.status_code})")
+    # Check if the response was a success
+    if response.status_code != 200:
+        print(f"Error: {response.status_code}")
+
+    
 
 
 
@@ -84,5 +78,4 @@ def scrape_details(productid):
 
     return [product_name, product_price, timestamp]
 
-data = scrape_details("304977")
-print(data)
+fetch_ids()
