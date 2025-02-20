@@ -2,6 +2,7 @@ import requests
 import csv
 from datetime import date
 import urllib.parse
+import Repository
 
 def scrape_database():
 
@@ -62,6 +63,17 @@ def fetch_ids():
         subclass2 = subclass[0]
         ID = subclass2["Stockcode"]
         Price = subclass2["CupPrice"]
+        try:
+            #if the product isnt already in the repository, add it to the repository
+            if not Repository.checkProductExists(ID):
+                Repository.createNewProduct(Name,ID)
+            #timestamp the entry to track price's over time
+            timestamp = str(date.today())
+            Repository.addprice(ID,Price,timestamp)
+        except Exception as e:
+            print(str(e))
+    print('price entry successful')
+
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -96,10 +108,14 @@ def scrape_details(productid):
         print("Price not found.")
         return None
 
-    # Timestamp each record so we can track price changes over time
-    timestamp = str(date.today())
-    print(f"Timestamp: {timestamp}")
-
-    return [product_name, product_price, timestamp]
+    try:
+        #if the product isnt already in the repository, add it to the repository
+        if not Repository.checkProductExists(productid):
+            Repository.createNewProduct(product_name,productid)
+        #timestamp the entry to track price's over time
+        timestamp = str(date.today())
+        Repository.addprice(productid,product_price,timestamp)
+    except:
+        print("error during product/price entry")
 
 fetch_ids()
