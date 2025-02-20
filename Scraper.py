@@ -55,6 +55,10 @@ def fetch_ids():
         print(f"Error: {response.status_code}")
         return
 
+    addResponseToDatabase(response)
+
+
+def addResponseToDatabase(response):
     response = response.json()
 
     for product in response['Bundles']:
@@ -76,7 +80,7 @@ def fetch_ids():
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------
-
+#EXTREMELY SLOW FOR SOME REASON, high latency for server communication
 def scrape_details(productid):
     base_url = "https://www.woolworths.com.au/api/v3/ui/schemaorg/product/"
     headers = {
