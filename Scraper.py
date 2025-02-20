@@ -18,7 +18,23 @@ def fetch_ids():
         "categoryId": "1_696F07C",
         "url": "/shop/browse/deli-chilled-meals/deli-meats",
         "formatObject": '{"name":"Deli Meats"}',
+        "pageNumber": 1,
+        "pageSize": 36,
+        "sortType": "TraderRelevance",
+        "location": "/shop/browse/deli-chilled-meals/deli-meats",
+        "isSpecial": False,
+        "isBundle": False,
+        "isMobile": False,
+        "filters": "[]", 
+        "token": None, 
+        "gpBoost": 0,
+        "isHideUnavailableProducts": False,
+        "enableAdReRanking": False,
+        "groupEdmVariants": True,
+        "categoryVersion": "v2",
+        "flags": '{"EnableProductBoostExperiment":false}'
     }
+
     # Properly encode the parameters
     encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
 
@@ -36,10 +52,18 @@ def fetch_ids():
     # Check if the response was a success
     if response.status_code != 200:
         print(f"Error: {response.status_code}")
+        return
 
-    
+    response = response.json()
 
+    for product in response['Bundles']:
+        Name = product["Name"]
+        subclass = product["Products"]
+        subclass2 = subclass[0]
+        ID = subclass2["Stockcode"]
+        Price = subclass2["CupPrice"]
 
+#----------------------------------------------------------------------------------------------------------------------------------------------------
 
 def scrape_details(productid):
     base_url = "https://www.woolworths.com.au/api/v3/ui/schemaorg/product/"
