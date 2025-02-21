@@ -45,7 +45,7 @@ def addprice(ID,Price,Date):
     try:
         conn = createConnection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO ProductPrice(ProductID,Price,Date) VALUES(?,?,?)",(ID,int(Price),Date))
+        cur.execute("INSERT INTO ProductPrice(ProductID,Price,Date) VALUES(?,?,?)",(ID,Price,Date))
         conn.commit()
         closeConnection(conn)
         return True

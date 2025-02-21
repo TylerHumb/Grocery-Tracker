@@ -4,25 +4,19 @@ from datetime import date
 import urllib.parse
 import Repository
 
-def scrape_database():
-
-    #for storing scraped data
-    data = []
-
-def fetch_ids():
+def fetch_ids(CategoryID,URL,Format,pg):
 
     # Base URL for the API
     base_url = "https://www.woolworths.com.au/apis/ui/browse/category"
 
     # Parameters for the API call
     params = {
-        "categoryId": "1_696F07C",
-        "url": "/shop/browse/deli-chilled-meals/deli-meats",
-        "formatObject": '{"name":"Deli Meats"}',
-        "pageNumber": 1,
+        "categoryId": CategoryID,
+        "url": "/shop/browse/" + URL,
+        "formatObject": '{"name":"'+Format+'"}',
+        "pageNumber": pg,
         "pageSize": 36,
         "sortType": "TraderRelevance",
-        "location": "/shop/browse/deli-chilled-meals/deli-meats",
         "isSpecial": False,
         "isBundle": False,
         "isMobile": False,
@@ -53,30 +47,60 @@ def fetch_ids():
     # Check if the response was a success
     if response.status_code != 200:
         print(f"Error: {response.status_code}")
-        return
-
-    addResponseToDatabase(response)
+        return False
+    response = response.json()
+    if addResponseToDatabase(response):
+        # if the length of the list of products is less than 36 we are on the last page, (page usually shows 36 products)
+        if len(response['Bundles']) < 36:
+            return  fetch_ids(CategoryID,URL,Format,pg + 1)
+    else:
+        print("error during data entry")
 
 
 def addResponseToDatabase(response):
-    response = response.json()
-
     for product in response['Bundles']:
         Name = product["Name"]
         subclass = product["Products"]
         subclass2 = subclass[0]
         ID = subclass2["Stockcode"]
-        Price = subclass2["CupPrice"]
+        Price = subclass2["Price"]
         try:
             #if the product isnt already in the repository, add it to the repository
             if not Repository.checkProductExists(ID):
                 Repository.createNewProduct(Name,ID)
             #timestamp the entry to track price's over time
             timestamp = str(date.today())
-            Repository.addprice(ID,Price,timestamp)
+            #only enter the price into the price repository if it exists
+            if Price:
+                Repository.addprice(ID,Price,timestamp)
         except Exception as e:
             print(str(e))
-    print('price entry successful')
+            return False
+    return True
+
+# make function to retrieve all category codes and shit, https://www.woolworths.com.au/apis/ui/PiesCategoriesWithSpecials (GET not POST)
+def populate_db():
+    URL = 'https://www.woolworths.com.au/apis/ui/PiesCategoriesWithSpecials'
+    # Headers for the request
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    }
+
+    categories = requests.get(URL,headers = headers)
+    if categories.status_code != 200:
+        print(f"Error: {categories.status_code}")
+        return
+
+    categories = categories.json()
+    for group in categories['Categories']:
+        # ignore specials and front of store to avoid duplicate entries
+        if group['NodeId'] == "specialsgroup" or group['NodeId'] == "front-of-store":
+            pass
+        else:
+            #enter each group into the database
+            print("adding data from "+group['Description'])
+            fetch_ids(group['NodeId'],group['UrlFriendlyName'],group['Description'],1)
+
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,4 +146,4 @@ def scrape_details(productid):
     except:
         print("error during product/price entry")
 
-fetch_ids()
+populate_db()
