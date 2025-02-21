@@ -94,7 +94,7 @@ def populate_db():
     categories = categories.json()
     for group in categories['Categories']:
         # ignore specials and front of store to avoid duplicate entries
-        if group['NodeId'] == "specialsgroup" or group['NodeId'] == "front-of-store":
+        if group['NodeId'] == "specialsgroup" or group['NodeId'] == "1_B63CF9E":
             pass
         else:
             #enter each group into the database
