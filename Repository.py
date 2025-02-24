@@ -1,54 +1,54 @@
-import sqlite3
-db_file = 'prices.db'
+import pyodbc
+
+# SQL server string, hosted on SQL express
+connectionString = r'DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost\SQLEXPRESS;DATABASE=Woolworths-Prices;Trusted_Connection=yes;'
 
 def createConnection():
-    conn = None
     try:
-        conn = sqlite3.connect(db_file)
+        conn = pyodbc.connect(connectionString)
         return conn
-    except:
-        print("connection failed")
+    except pyodbc.Error as e:
+        print("Connection failed:", e)
+        return None
 
 def closeConnection(conn):
-    if conn:
+    if conn is not None:
         conn.close()
 
-def checkProductExists(ID):
+def checkProductExists(ID,conn):
     try:
-        conn = createConnection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM Products WHERE ProductID = ?",(ID,))
+        cur.execute("SELECT * FROM Products WHERE ProductID = ?", (ID,))
         product = cur.fetchone()
-        closeConnection(conn)
-        if product is None:
-            return False
-        return True
-    except sqlite3.Error as e:
-        closeConnection(conn)
-        raise Exception("Error during checking product")
+        
+        return product is not None
+    except pyodbc.Error as e:
+        print("Error during checking product:", e)
+        raise
 
-
-
-def createNewProduct(Product_Name,ID):
+def createNewProduct(Product_Name, ID,conn):
     try:
-        conn = createConnection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO Products(Name,ProductID) VALUES(?,?)",(Product_Name,ID))
+        cur.execute("INSERT INTO Products(Name, ProductID) VALUES(?, ?)", (Product_Name, ID))
         conn.commit()
-        closeConnection(conn)
         return True
-    except sqlite3.Error as e:
-        closeConnection(conn)
-        raise Exception("Error during product creation")
-    
-def addprice(ID,Price,Date):
+    except pyodbc.Error as e:
+        print("Error during product creation:", e)
+        raise
+
+def addprice(ID, Price, Date,conn):
     try:
-        conn = createConnection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO ProductPrice(ProductID,Price,Date) VALUES(?,?,?)",(ID,Price,Date))
+        #check if price has changes since last check
+        cur.execute("SELECT TOP 1 Price FROM ProductPrice WHERE ProductID = ? ORDER BY Date DESC", (ID,))
+        lastprice = cur.fetchone()
+        # if last price is same a current price, exit function
+        if lastprice and lastprice[0] == str(Price):
+            return True 
+
+        cur.execute("INSERT INTO ProductPrice(ProductID, Price, Date) VALUES(?, ?, ?)", (ID, Price, Date))
         conn.commit()
-        closeConnection(conn)
         return True
-    except sqlite3.Error as e:
-        closeConnection(conn)
-        raise Exception("Error during price entry")
+    except pyodbc.Error as e:
+        print("Error during price entry:", e)
+        raise

@@ -1,20 +1,18 @@
 import requests
-import csv
 from datetime import date
 import urllib.parse
 import Repository
 
-def fetch_ids(CategoryID,URL,Format,pg):
+def fetch_ids(CategoryID,URL,Format,pg,conn):
 
     # Base URL for the API
     base_url = "https://www.woolworths.com.au/apis/ui/browse/category"
-
     # Parameters for the API call
     params = {
         "categoryId": CategoryID,
         "url": "/shop/browse/" + URL,
         "formatObject": '{"name":"'+Format+'"}',
-        "pageNumber": pg,
+        "pageNumber": str(pg),
         "pageSize": 36,
         "sortType": "TraderRelevance",
         "isSpecial": False,
@@ -49,15 +47,15 @@ def fetch_ids(CategoryID,URL,Format,pg):
         print(f"Error: {response.status_code}")
         return False
     response = response.json()
-    if addResponseToDatabase(response):
+    if addResponseToDatabase(response,conn):
         # if the length of the list of products is less than 36 we are on the last page, (page usually shows 36 products)
-        if len(response['Bundles']) < 36:
-            return  fetch_ids(CategoryID,URL,Format,pg + 1)
+        if len(response['Bundles']) >= 36:
+            return  fetch_ids(CategoryID,URL,Format,pg + 1,conn)
     else:
         print("error during data entry")
 
 
-def addResponseToDatabase(response):
+def addResponseToDatabase(response,conn):
     for product in response['Bundles']:
         Name = product["Name"]
         subclass = product["Products"]
@@ -66,13 +64,13 @@ def addResponseToDatabase(response):
         Price = subclass2["Price"]
         try:
             #if the product isnt already in the repository, add it to the repository
-            if not Repository.checkProductExists(ID):
-                Repository.createNewProduct(Name,ID)
+            if not Repository.checkProductExists(ID,conn):
+                Repository.createNewProduct(Name,ID,conn)
             #timestamp the entry to track price's over time
             timestamp = str(date.today())
             #only enter the price into the price repository if it exists
             if Price:
-                Repository.addprice(ID,Price,timestamp)
+                Repository.addprice(ID,Price,timestamp,conn)
         except Exception as e:
             print(str(e))
             return False
@@ -92,14 +90,19 @@ def populate_db():
         return
 
     categories = categories.json()
-    for group in categories['Categories']:
-        # ignore specials and front of store to avoid duplicate entries
-        if group['NodeId'] == "specialsgroup" or group['NodeId'] == "1_B63CF9E":
-            pass
-        else:
-            #enter each group into the database
-            print("adding data from "+group['Description'])
-            fetch_ids(group['NodeId'],group['UrlFriendlyName'],group['Description'],1)
+    try:
+        conn = Repository.createConnection()
+        for group in categories['Categories']:
+            # ignore specials and front of store to avoid duplicate entries
+            if group['NodeId'] == "specialsgroup" or group['NodeId'] == "1_B63CF9E":
+                pass
+            else:
+                #enter each group into the database
+                print("adding data from "+group['Description'])
+                fetch_ids(group['NodeId'],group['UrlFriendlyName'],group['Description'],1,conn)
+    except Exception as e:
+        print(str(e))
+        Repository.closeConnection(conn)
 
 
 
