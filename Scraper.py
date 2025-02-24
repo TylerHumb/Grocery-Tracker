@@ -2,6 +2,7 @@ import requests
 from datetime import date
 import urllib.parse
 import Repository
+import json
 
 def fetch_ids(CategoryID,URL,Format,pg,conn):
 
@@ -18,7 +19,7 @@ def fetch_ids(CategoryID,URL,Format,pg,conn):
         "isSpecial": False,
         "isBundle": False,
         "isMobile": False,
-        "filters": "[]", 
+        "filters": '[]', 
         "token": None, 
         "gpBoost": 0,
         "isHideUnavailableProducts": False,
@@ -27,7 +28,6 @@ def fetch_ids(CategoryID,URL,Format,pg,conn):
         "categoryVersion": "v2",
         "flags": '{"EnableProductBoostExperiment":false}'
     }
-
     # Properly encode the parameters
     encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
 
@@ -42,12 +42,13 @@ def fetch_ids(CategoryID,URL,Format,pg,conn):
     # Make the GET request with headers
     response = requests.get(final_url, headers=headers)
 
+
     # Check if the response was a success
     if response.status_code != 200:
         print(f"Error: {response.status_code}")
         return False
     response = response.json()
-    if addResponseToDatabase(response,conn):
+    if addResponseToDatabase(response,CategoryID,conn):
         # if the length of the list of products is less than 36 we are on the last page, (page usually shows 36 products)
         if len(response['Bundles']) >= 36:
             return  fetch_ids(CategoryID,URL,Format,pg + 1,conn)
@@ -55,7 +56,7 @@ def fetch_ids(CategoryID,URL,Format,pg,conn):
         print("error during data entry")
 
 
-def addResponseToDatabase(response,conn):
+def addResponseToDatabase(response,CategoryID,conn):
     for product in response['Bundles']:
         Name = product["Name"]
         subclass = product["Products"]
@@ -65,7 +66,7 @@ def addResponseToDatabase(response,conn):
         try:
             #if the product isnt already in the repository, add it to the repository
             if not Repository.checkProductExists(ID,conn):
-                Repository.createNewProduct(Name,ID,conn)
+                Repository.createNewProduct(Name,ID,CategoryID,conn)
             #timestamp the entry to track price's over time
             timestamp = str(date.today())
             #only enter the price into the price repository if it exists

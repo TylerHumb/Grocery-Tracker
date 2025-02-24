@@ -26,10 +26,10 @@ def checkProductExists(ID,conn):
         print("Error during checking product:", e)
         raise
 
-def createNewProduct(Product_Name, ID,conn):
+def createNewProduct(Product_Name, ID,CategoryID,conn):
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO Products(Name, ProductID) VALUES(?, ?)", (Product_Name, ID))
+        cur.execute("INSERT INTO Products(Name, ProductID,CategoryID) VALUES(?, ?, ?)", (Product_Name, ID,CategoryID))
         conn.commit()
         return True
     except pyodbc.Error as e:
@@ -47,6 +47,16 @@ def addprice(ID, Price, Date,conn):
             return True 
 
         cur.execute("INSERT INTO ProductPrice(ProductID, Price, Date) VALUES(?, ?, ?)", (ID, Price, Date))
+        conn.commit()
+        return True
+    except pyodbc.Error as e:
+        print("Error during price entry:", e)
+        raise
+
+def createcategory(ID,Name,conn):
+    try:
+        cur = conn.cursor() 
+        cur.execute("INSERT INTO Categories(CategoryID, Name) VALUES(?, ?)", (ID, Name))
         conn.commit()
         return True
     except pyodbc.Error as e:
