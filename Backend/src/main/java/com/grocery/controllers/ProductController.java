@@ -22,5 +22,4 @@ public class ProductController {
     public Product getProductByID(@PathVariable String productid){
         return service.getProductByID(productid);
     }
-
 }
