@@ -53,6 +53,17 @@ def addprice(ID, Price, Date,conn):
         print("Error during price entry:", e)
         raise
 
+def checkCategoryExists(ID,conn):
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM Categories WHERE CategoryID = ?", (ID,))
+        product = cur.fetchone()
+        
+        return product is not None
+    except pyodbc.Error as e:
+        print("Error during checking product:", e)
+        raise
+
 def createcategory(ID,Name,conn):
     try:
         cur = conn.cursor() 

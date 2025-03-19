@@ -99,6 +99,9 @@ def populate_db():
                 pass
             else:
                 #enter each group into the database
+                #if the category isnt already in the database, add it to the database
+                if not Repository.checkCategoryExists(group['NodeId'],conn):
+                    Repository.createcategory(group['NodeId'],group['Description'],conn)
                 print("adding data from "+group['Description'])
                 fetch_ids(group['NodeId'],group['UrlFriendlyName'],group['Description'],1,conn)
     except Exception as e:
