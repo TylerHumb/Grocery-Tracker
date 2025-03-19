@@ -38,7 +38,7 @@ public class ProductController {
         return service.getCurrentPrice(ProductID);
     }
     @GetMapping("/search/{Query}")
-    public HashMap<Product,Price> Search(@PathVariable String Query){
+    public HashMap<String,Price> Search(@PathVariable String Query){
         return service.Search(Query);
     }
 

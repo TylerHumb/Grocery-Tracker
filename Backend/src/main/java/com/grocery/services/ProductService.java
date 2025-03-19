@@ -28,7 +28,7 @@ public class ProductService {
         return repository.getCurrentPrice(ProductID);
     }
 
-    public HashMap<Product,Price> Search(String Query){
+    public HashMap<String,Price> Search(String Query){
         return repository.Search(Query);
     }
 }

@@ -86,7 +86,7 @@ public class ProductRepository {
             throw new RuntimeException("Error in getCurrentPrice",e);
         }
     }
-    public HashMap<Product,Price> Search(String Query){
+    public HashMap<String,Price> Search(String Query){
         try {
             Connection connection = this.source.getConnection();
             PreparedStatement stm = connection.prepareStatement("SELECT TOP 30 * FROM Products WHERE Name LIKE ?");
@@ -96,10 +96,12 @@ public class ProductRepository {
             if (result.wasNull()) {
                 return null;
             }
-            HashMap<Product,Price> searchresults = new HashMap<Product,Price>();
+            HashMap<String,Price> searchresults = new HashMap<String,Price>();
             while(result.next()){
-                Product product = new Product(result.getString("ProductID"), result.getString("Name"), result.getString("CategoryID"));
-                searchresults.put(product, lightgetCurrentPrice(product.ProductID(),connection));
+                Price pricedata = lightgetCurrentPrice(result.getString("ProductID"),connection);
+                if (pricedata != null){ 
+                searchresults.put(result.getString("Name"), pricedata);
+                } 
             }
             connection.close();
             return searchresults;
