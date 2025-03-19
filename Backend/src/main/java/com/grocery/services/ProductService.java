@@ -1,5 +1,6 @@
 package com.grocery.services;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,9 @@ public class ProductService {
 
     public Price getCurrentPrice(String ProductID){
         return repository.getCurrentPrice(ProductID);
+    }
+
+    public HashMap<Product,Price> Search(String Query){
+        return repository.Search(Query);
     }
 }

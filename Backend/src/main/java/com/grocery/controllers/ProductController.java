@@ -1,6 +1,8 @@
 package com.grocery.controllers;
 
+import java.util.HashMap;
 import java.util.List;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +36,10 @@ public class ProductController {
     @GetMapping("/lastprice/{ProductID}")
     public Price getCurrentPrice(@PathVariable String ProductID){
         return service.getCurrentPrice(ProductID);
+    }
+    @GetMapping("/search/{Query}")
+    public HashMap<Product,Price> Search(@PathVariable String Query){
+        return service.Search(Query);
     }
 
 }
