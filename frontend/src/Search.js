@@ -36,6 +36,7 @@ function Search(){
             ) : (
               Object.entries(results).map(([productName, productDetails]) => (
                 <div key={productName} className="product-item" onClick={() =>navigateProdcut(productDetails.ProductID)}>
+                  <img src={`https://cdn0.woolworths.media/content/wowproductimages/small/${productDetails.ProductID}.jpg`} />
                   <h2>{productName}</h2>
                   {/* Check if productDetails is null or undefined */}
                   {!productDetails ? (

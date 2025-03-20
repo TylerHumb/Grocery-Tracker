@@ -46,7 +46,7 @@ public class ProductRepository {
     public List<Price> getAllPrices(String ProductID){
         try {
             Connection connection = this.source.getConnection();
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM ProductPrice WHERE ProductID = ?");
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM ProductPrice WHERE ProductID = ? ORDER BY Date DESC");
             stm.setString(1, ProductID);
             ResultSet result = stm.executeQuery();
             //Ensure the query yielded a result
